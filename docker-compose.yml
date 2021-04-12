@@ -1,0 +1,110 @@
+version: "3"
+
+networks:
+  aero:
+
+services:
+  site:
+    build:
+      context: .
+      dockerfile: nginx.dockerfile
+    container_name: nginx
+    ports:
+      - 80:80
+    volumes:
+      - ./src:/var/www/html:delegated
+    depends_on:
+      - php
+      - mysql
+      - mailhog
+      - elasticsearch
+    networks:
+      - aero
+
+  mysql:
+    image: mysql:5.7.29
+    container_name: mysql
+    restart: unless-stopped
+    tty: true
+    ports:
+      - 3336:3306
+    environment:
+      MYSQL_DATABASE: aero
+      MYSQL_USER: aero
+      MYSQL_PASSWORD: aero
+      MYSQL_ROOT_PASSWORD: aero
+      SERVICE_TAGS: dev
+      SERVICE_NAME: mysql
+    networks:
+      - aero
+    volumes:
+      - ./mysql:/var/lib/mysql
+
+  php:
+    build:
+      context: .
+      dockerfile: php.dockerfile
+    container_name: php
+    volumes:
+      - ./src:/var/www/html:delegated
+    networks:
+      - aero
+
+  composer:
+    build:
+      context: .
+      dockerfile: composer.dockerfile
+    container_name: composer
+    volumes:
+      - ./src:/var/www/html
+    working_dir: /var/www/html
+    depends_on:
+      - php
+      - mysql
+    user: aero
+    entrypoint: ["composer"]
+    networks:
+      - aero
+  npm:
+    image: node:13.7
+    container_name: npm
+    volumes:
+      - ./src:/var/www/html
+    working_dir: /var/www/html
+    entrypoint: ["npm"]
+    networks:
+      - aero
+
+  artisan:
+    build:
+      context: .
+      dockerfile: php.dockerfile
+    container_name: artisan
+    volumes:
+      - ./src:/var/www/html:delegated
+    depends_on:
+      - mysql
+    working_dir: /var/www/html
+    user: aero
+    entrypoint: ["php", "/var/www/html/artisan"]
+    networks:
+      - aero
+
+  mailhog:
+    image: mailhog/mailhog:latest
+    container_name: mailhog
+    ports:
+      - 1025:1025
+      - 8025:8025
+    networks:
+      - aero
+
+  elasticsearch:
+    image: elasticsearch:6.8.15
+    container_name: elasticsearch
+    ports:
+      - 9200:9200
+    environment:
+      discovery.type: single-node
+    networks:
+      - aero
