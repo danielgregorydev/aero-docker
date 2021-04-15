@@ -14,7 +14,7 @@ WORKDIR /var/www/html
 
 RUN docker-php-ext-install pdo pdo_mysql
 
-RUN apt-get update -y && apt-get install -y sendmail libpng-dev && apt-get install -y libzip-dev
+RUN apt-get update -y && apt-get install -y sendmail libpng-dev && apt-get install -y libzip-dev && apt-get install -y libjpeg-dev && apt-get install -y libfreetype6-dev && apt-get install -y libwebp-dev
 
 RUN apt-get update && \
     apt-get install -y \
@@ -22,6 +22,8 @@ RUN apt-get update && \
 
 RUN docker-php-ext-install zip
 
+
+RUN docker-php-ext-configure gd --with-freetype --with-jpeg --with-webp
 RUN docker-php-ext-install gd
 
 RUN docker-php-ext-install bcmath
