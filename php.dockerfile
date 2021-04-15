@@ -12,21 +12,20 @@ RUN chown aero:aero /var/www/html
 
 WORKDIR /var/www/html
 
-RUN docker-php-ext-install pdo pdo_mysql
+RUN apt-get update -y
 
-RUN apt-get update -y && apt-get install -y sendmail libpng-dev && apt-get install -y libzip-dev && apt-get install -y libjpeg-dev && apt-get install -y libfreetype6-dev && apt-get install -y libwebp-dev
-
-RUN apt-get update && \
-    apt-get install -y \
-        zlib1g-dev
-
-RUN docker-php-ext-install zip
-
+# all bar send mail and libzip required for gd
+RUN apt-get install -y --no-install-recommends \
+sendmail \
+libzip-dev \
+zlib1g-dev \
+libpng-dev \
+libjpeg-dev \
+libfreetype6-dev \
+libwebp-dev
 
 RUN docker-php-ext-configure gd --with-freetype --with-jpeg --with-webp
-RUN docker-php-ext-install gd
-
-RUN docker-php-ext-install bcmath
+RUN docker-php-ext-install pdo pdo_mysql zip gd bcmath
 
 # Aero requires node for ssr
 
